@@ -56,14 +56,15 @@ def create_app(test_config=None):
     @app.route("/questions/<int:question_id>", methods=["DELETE"])
     def delete_question(question_id):
         try:
-            question = Question.query.filter(Question.id == question_id).one_or_none()
-            if question == None:
+            question = Question.query.filter(id == question_id).one_or_none()
+            if question is None:
                 abort(404)
             else:
                 question.delete()
                 db.session.commit()
             return jsonify({"success": True, "msg": "question is deleted"})
         except Exception as e:
+            print(e)
             abort(500)
 
     @app.route("/questions", methods=["POST"])
@@ -76,13 +77,15 @@ def create_app(test_config=None):
         difficulty = body.get("difficulty")
 
         new_question = Question(
-            question=question, answer=answer, difficulty=difficulty, category=category
+            question=question, answer=answer,
+            difficulty=difficulty, category=category
         )
         try:
             db.session.add(new_question)
             db.session.commit()
             return jsonify({"msg": "Item added", "success": True})
-        except:
+        except Exception as e:
+            print(e)
             abort(500)
 
     @app.route("/questions/search", methods=["POST"])
@@ -96,9 +99,11 @@ def create_app(test_config=None):
             ).all()
             formated = [question.format() for question in questions]
             return jsonify(
-                {"success": True, "questions": formated, "totalQuestions": len(allqs)}
+                {"success": True, "questions": formated,
+                    "totalQuestions": len(allqs)}
             )
-        except:
+        except Exception as e:
+            print(e)
             abort(500)
 
     @app.route("/categories/<int:category_id>/questions", methods=["GET"])
@@ -116,7 +121,8 @@ def create_app(test_config=None):
                     "currentCategory": category_id,
                 }
             )
-        except:
+        except Exception as e:
+            print(e)
             abort(500)
 
     @app.route("/quizzes", methods=["POST"])
@@ -126,11 +132,11 @@ def create_app(test_config=None):
             prev_questions = body.get("previous_questions")
             questions = []
 
-            category_id = body.get("quiz_category")
-            if category_id == 0:
+            categoryid = body.get("quiz_category")
+            if categoryid == 0:
                 questions = Question.query.all()
             else:
-                questions = Question.query.filter_by(category=category_id).all()
+                questions = Question.query.filter_by(category=categoryid).all()
             formated = [question.format() for question in questions]
             print(prev_questions)
 
@@ -139,21 +145,24 @@ def create_app(test_config=None):
             return jsonify({"question": nextq, "success": True})
 
         except Exception as e:
+            print(e)
             abort(500)
 
     @app.errorhandler(404)
     def not_found(error):
-        return jsonify({"success": False, "error": 404, "message": "Not found"}), 404
+        return jsonify({"success": False, "error": 404,
+                        "message": "Not found"}), 404
 
     @app.errorhandler(500)
     def server_error(error):
-        return jsonify({"success": False, "error": 500, "message": "Server error"}), 500
+        return jsonify({"success": False, "error": 500,
+                        "message": "Server error"}), 500
 
     @app.errorhandler(405)
     def method_not_found(error):
         return (
-            jsonify({"success": False, "error": 405, "message": "Method not found"}),
-            405,
+            jsonify({"success": False, "error": 405,
+                    "message": "Method not found"}), 405
         )
 
     return app
