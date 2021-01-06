@@ -16,6 +16,7 @@ def create_app(test_config=None):
 
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
+    # cors
     @app.after_request
     def after_request(response):
         response.headers.add(
@@ -26,12 +27,14 @@ def create_app(test_config=None):
         )
         return response
 
+    # get categories
     @app.route("/categories", methods=["GET"])
     def get_categories():
         cats = Category.query.all()
         formated = [cat.format() for cat in cats]
         return jsonify({"categories": formated})
 
+    # get all questions
     @app.route("/questions", methods=["GET"])
     def get_questions():
         page = request.args.get("page", 1, type=int)
@@ -53,6 +56,7 @@ def create_app(test_config=None):
             }
         )
 
+    # delete question by id
     @app.route("/questions/<int:question_id>", methods=["DELETE"])
     def delete_question(question_id):
         try:
@@ -67,6 +71,7 @@ def create_app(test_config=None):
             print(e)
             abort(500)
 
+    # add question to the database
     @app.route("/questions", methods=["POST"])
     def add_question():
         body = request.get_json()
@@ -88,6 +93,7 @@ def create_app(test_config=None):
             print(e)
             abort(500)
 
+    # search for specific question
     @app.route("/questions/search", methods=["POST"])
     def search_question():
         body = request.get_json()
@@ -106,6 +112,7 @@ def create_app(test_config=None):
             print(e)
             abort(500)
 
+    # get questions by category ids
     @app.route("/categories/<int:category_id>/questions", methods=["GET"])
     def get_questions_by_cat(category_id):
         try:
@@ -125,6 +132,7 @@ def create_app(test_config=None):
             print(e)
             abort(500)
 
+    # play the game which gets next question
     @app.route("/quizzes", methods=["POST"])
     def play_trivia():
         body = request.get_json()
@@ -148,16 +156,19 @@ def create_app(test_config=None):
             print(e)
             abort(500)
 
+    # not found error handler
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({"success": False, "error": 404,
                         "message": "Not found"}), 404
 
+    # server error handler
     @app.errorhandler(500)
     def server_error(error):
         return jsonify({"success": False, "error": 500,
                         "message": "Server error"}), 500
 
+    # method not found error handler
     @app.errorhandler(405)
     def method_not_found(error):
         return (
